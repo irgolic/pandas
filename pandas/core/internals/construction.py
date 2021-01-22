@@ -236,23 +236,20 @@ def init_ndarray(values, index, columns, dtype: Optional[DtypeObj], copy: bool):
     # on the entire block; this is to convert if we have datetimelike's
     # embedded in an object type
     if dtype is None and is_object_dtype(values.dtype):
-
         if values.ndim == 2 and values.shape[0] != 1:
-            # transpose and separate blocks
-
-            dvals_list = [maybe_infer_to_datetimelike(row) for row in values]
-            for n in range(len(dvals_list)):
-                if isinstance(dvals_list[n], np.ndarray):
-                    dvals_list[n] = dvals_list[n].reshape(1, -1)
-
-            from pandas.core.internals.blocks import make_block
-
-            # TODO: What about re-joining object columns?
-            block_values = [
-                make_block(dvals_list[n], placement=[n], ndim=2)
-                for n in range(len(dvals_list))
+            maybe_datetime = [
+                maybe_infer_to_datetimelike(instance) for instance in values
             ]
-
+            # don't convert (and copy) the objects if no type inference occurs
+            if any(
+                not is_dtype_equal(instance.dtype, values.dtype)
+                for instance in maybe_datetime
+            ):
+                return create_block_manager_from_arrays(
+                    maybe_datetime, columns, [columns, index]
+                )
+            else:
+                block_values = [values]
         else:
             datelike_vals = maybe_infer_to_datetimelike(values)
             block_values = [datelike_vals]
