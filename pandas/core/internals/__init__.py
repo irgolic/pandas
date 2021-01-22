@@ -40,5 +40,4 @@ __all__ = [
     "concatenate_block_managers",
     # those two are preserved here for downstream compatibility (GH-33892)
     "create_block_manager_from_arrays",
-    "create_block_manager_from_blocks",
 ]

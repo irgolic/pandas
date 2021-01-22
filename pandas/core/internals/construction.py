@@ -230,7 +230,8 @@ def init_ndarray(values, index, columns, dtype: Optional[DtypeObj], copy: bool):
     index, columns = _get_axes(
         values.shape[0], values.shape[1], index=index, columns=columns
     )
-    values = values.T
+
+    array = values.T
 
     # if we don't have a dtype specified, then try to convert objects
     # on the entire block; this is to convert if we have datetimelike's
@@ -248,12 +249,8 @@ def init_ndarray(values, index, columns, dtype: Optional[DtypeObj], copy: bool):
                 return create_block_manager_from_arrays(
                     maybe_datetime, columns, [columns, index]
                 )
-            else:
-                array = values
         else:
             array = maybe_infer_to_datetimelike(values)
-    else:
-        array = values
 
     return create_block_manager_from_array(array, [columns, index])
 

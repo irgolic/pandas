@@ -1633,28 +1633,6 @@ class SingleBlockManager(BlockManager):
 # Constructor Helpers
 
 
-def create_block_manager_from_blocks(blocks, axes: List[Index]) -> BlockManager:
-    if len(blocks) == 1 and not isinstance(blocks[0], Block):
-        # if blocks[0] is of length 0, return empty blocks
-        if not len(blocks[0]):
-            blocks = []
-        else:
-            # It's OK if a single block is passed as values, its placement
-            # is basically "all items", but if there're many, don't bother
-            # converting, it's an error anyway.
-            return create_block_manager_from_array(blocks[0], axes)
-
-    try:
-        mgr = BlockManager(blocks, axes)
-        mgr._consolidate_inplace()
-        return mgr
-
-    except ValueError as e:
-        blocks = [getattr(b, "values", b) for b in blocks]
-        tot_items = sum(b.shape[0] for b in blocks)
-        raise construction_error(tot_items, blocks[0].shape[1:], axes, e)
-
-
 def create_block_manager_from_arrays(
     arrays, names: Index, axes: List[Index]
 ) -> BlockManager:
