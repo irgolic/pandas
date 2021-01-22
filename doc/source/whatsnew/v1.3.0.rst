@@ -33,6 +33,28 @@ For example:
         storage_options=headers
     )
 
+
+.. _whatsnew_130.dataframe_honors_copy_with_dict:
+
+DataFrame constructor honors ``copy=False`` With Dict
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When passing a dictionary to :class:`DataFrame` with (the default) ``copy=False``,
+a copy will no longer be made (:issue:`32960`)
+
+.. ipython:: python
+
+    arr = np.array([1, 2, 3])
+    df = pd.DataFrame({"A": arr, "B": arr.copy()})
+    df
+
+``df["A"]`` remains a view on ``arr``:
+
+.. ipython:: python
+
+    arr[0] = 0
+    assert df.iloc[0, 0] == 0
+
 .. _whatsnew_130.enhancements.other:
 
 Other enhancements

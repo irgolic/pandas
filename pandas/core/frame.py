@@ -519,6 +519,7 @@ class DataFrame(NDFrame, OpsMixin):
     ):
         if data is None:
             data = {}
+            copy = True
         if dtype is not None:
             dtype = self._validate_dtype(dtype)
 
@@ -536,7 +537,7 @@ class DataFrame(NDFrame, OpsMixin):
             )
 
         elif isinstance(data, dict):
-            mgr = init_dict(data, index, columns, dtype=dtype)
+            mgr = init_dict(data, index, columns, dtype=dtype, copy=copy)
         elif isinstance(data, ma.MaskedArray):
             import numpy.ma.mrecords as mrecords
 

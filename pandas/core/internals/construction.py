@@ -78,6 +78,7 @@ def arrays_to_mgr(
     columns,
     dtype: Optional[DtypeObj] = None,
     verify_integrity: bool = True,
+    consolidate: bool = True,
 ):
     """
     Segregate Series based on type and coerce into matrices.
@@ -104,7 +105,9 @@ def arrays_to_mgr(
     # from BlockManager perspective
     axes = [columns, index]
 
-    return create_block_manager_from_arrays(arrays, arr_names, axes)
+    return create_block_manager_from_arrays(
+        arrays, arr_names, axes, consolidate=consolidate
+    )
 
 
 def masked_rec_array_to_mgr(
@@ -180,7 +183,13 @@ def mgr_to_mgr(mgr, typ: str):
 # DataFrame Constructor Interface
 
 
-def init_ndarray(values, index, columns, dtype: Optional[DtypeObj], copy: bool):
+def init_ndarray(
+    values,
+    index,
+    columns,
+    dtype: Optional[DtypeObj],
+    copy: bool,
+):
     # input must be a ndarray, list, Series, index
 
     if isinstance(values, ABCSeries):
@@ -262,7 +271,14 @@ def init_ndarray(values, index, columns, dtype: Optional[DtypeObj], copy: bool):
     return create_block_manager_from_blocks(block_values, [columns, index])
 
 
-def init_dict(data: Dict, index, columns, dtype: Optional[DtypeObj] = None):
+def init_dict(
+    data: Dict,
+    index,
+    columns,
+    *,
+    dtype: Optional[DtypeObj] = None,
+    copy: bool = True,
+):
     """
     Segregate Series based on type and coerce into matrices.
     Needs to handle a lot of exceptional cases.
@@ -296,6 +312,8 @@ def init_dict(data: Dict, index, columns, dtype: Optional[DtypeObj] = None):
             val = construct_1d_arraylike_from_scalar(np.nan, len(index), nan_dtype)
             arrays.loc[missing] = [val] * missing.sum()
 
+        arrays = list(arrays)
+
     else:
         keys = list(data.keys())
         columns = data_names = Index(keys)
@@ -306,7 +324,15 @@ def init_dict(data: Dict, index, columns, dtype: Optional[DtypeObj] = None):
         arrays = [
             arr if not is_datetime64tz_dtype(arr) else arr.copy() for arr in arrays
         ]
-    return arrays_to_mgr(arrays, data_names, index, columns, dtype=dtype)
+
+    if copy:
+        # arrays_to_mgr (via form_blocks) won't make copies for EAs
+        arrays = [x if not is_extension_array_dtype(x) else x.copy() for x in arrays]
+        # TODO: can we get rid of the dt64tz special case above?
+
+    return arrays_to_mgr(
+        arrays, data_names, index, columns, dtype=dtype, consolidate=copy
+    )
 
 
 def nested_data_to_arrays(
