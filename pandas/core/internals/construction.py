@@ -60,8 +60,8 @@ from pandas.core.indexes.api import (
     union_indexes,
 )
 from pandas.core.internals.managers import (
+    create_block_manager_from_array,
     create_block_manager_from_arrays,
-    create_block_manager_from_blocks,
 )
 
 if TYPE_CHECKING:
@@ -249,14 +249,13 @@ def init_ndarray(values, index, columns, dtype: Optional[DtypeObj], copy: bool):
                     maybe_datetime, columns, [columns, index]
                 )
             else:
-                block_values = [values]
+                array = values
         else:
-            datelike_vals = maybe_infer_to_datetimelike(values)
-            block_values = [datelike_vals]
+            array = maybe_infer_to_datetimelike(values)
     else:
-        block_values = [values]
+        array = values
 
-    return create_block_manager_from_blocks(block_values, [columns, index])
+    return create_block_manager_from_array(array, [columns, index])
 
 
 def init_dict(data: Dict, index, columns, dtype: Optional[DtypeObj] = None):
